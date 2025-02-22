@@ -123,7 +123,7 @@ private fun TrackScreen(
     }
 
     LaunchedEffect(shouldScroll) {
-        if(shouldScroll){
+        if(shouldScroll && taskList.isNotEmpty()){
             coroutineScope.launch {
                 scrollState.animateScrollToItem(taskList.size - 1)
                 onScrolled()

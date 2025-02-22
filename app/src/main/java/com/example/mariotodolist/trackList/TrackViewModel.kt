@@ -60,11 +60,14 @@ class TrackViewModel @Inject constructor() : ViewModel() {
             )
         )
         _uiState.update {
-            it.copy(shouldScroll = true)
+            it.copy(
+                shouldScroll = true,
+                taskList = _taskList
+            )
         }
     }
 
-    fun onScrolled(){
+    fun onScrolled() {
         _uiState.update {
             it.copy(shouldScroll = false)
         }
