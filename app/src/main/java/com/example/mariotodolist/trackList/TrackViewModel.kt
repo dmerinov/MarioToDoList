@@ -54,7 +54,7 @@ class TrackViewModel @Inject constructor() : ViewModel() {
     fun onAddTask() {
         _taskList.add(
             CheckListEntity(
-                id = _taskList.size + 1,
+                id = _taskList.size,
                 title = "item ${_taskList.size + 1}",
                 isChecked = false
             )
