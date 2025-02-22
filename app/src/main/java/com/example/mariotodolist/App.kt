@@ -6,15 +6,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.mariotodolist.trackList.TrackScreen
-import com.example.mariotodolist.ui.theme.MarioToDoListTheme
+import com.example.mariotodolist.ui.theme.AppTheme
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
-class App: Application()
+class App : Application()
 
 @Composable
 fun MyAppContent() {
-    MarioToDoListTheme {
+
+    AppTheme {
         val navController = rememberNavController()
         NavHost(navController = navController, startDestination = "main") {
             composable(route = "main") {
