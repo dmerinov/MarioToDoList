@@ -14,7 +14,8 @@ class TrackViewModel @Inject constructor() : ViewModel() {
         TrackState(
             loading = false,
             taskList = listOf(),
-            playSound = false
+            playSound = false,
+            shouldScroll = false
         )
     )
     val uiState = _uiState
@@ -56,6 +57,25 @@ class TrackViewModel @Inject constructor() : ViewModel() {
                 taskList = _taskList,
                 playSound = !currentValue
             )
+        }
+    }
+
+    fun onAddTask() {
+        _taskList.add(
+            CheckListEntity(
+                id = _taskList.size + 1,
+                title = "item ${_taskList.size + 1}",
+                isChecked = false
+            )
+        )
+        _uiState.update {
+            it.copy(shouldScroll = true)
+        }
+    }
+
+    fun onScrolled(){
+        _uiState.update {
+            it.copy(shouldScroll = false)
         }
     }
 
