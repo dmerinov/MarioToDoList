@@ -108,7 +108,7 @@ fun PlaySound(
 
     if (shouldPlay) {
         LaunchedEffect(Unit) {
-            mediaPlayer = MediaPlayer.create(context, R.raw.mario_coin_sound)
+            mediaPlayer = MediaPlayer.create(context, R.raw.coin)
             mediaPlayer?.setOnCompletionListener {
                 it.release()
                 mediaPlayer = null
