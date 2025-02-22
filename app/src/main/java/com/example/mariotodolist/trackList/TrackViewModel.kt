@@ -28,15 +28,6 @@ class TrackViewModel @Inject constructor() : ViewModel() {
     private fun startConfigurations() {
         showLoading()
         //perform some shit
-        (1..50).forEachIndexed { index, _ ->
-            _taskList.add(
-                CheckListEntity(
-                    title = "Task $index",
-                    isChecked = false,
-                    id = index
-                )
-            )
-        }
         _uiState.update {
             it.copy(
                 taskList = _taskList
