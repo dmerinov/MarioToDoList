@@ -73,4 +73,6 @@ dependencies {
     kapt(libs.google.dagger.hilt.compiler)
     //splash
     implementation(libs.androidx.splashscreen)
+    //navigation
+    implementation (libs.androidx.navigation.compose)
 }
