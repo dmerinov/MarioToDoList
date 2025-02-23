@@ -6,5 +6,7 @@ data class TrackState(
     val loading: Boolean,
     val taskList: List<CheckListEntity>,
     val playSound: Boolean,
-    val shouldScroll: Boolean
+    val shouldScroll: Boolean,
+    val isModalExpanded: Boolean,
+    val textFieldValue: String
 )

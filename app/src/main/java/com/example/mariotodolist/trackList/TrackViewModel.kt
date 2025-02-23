@@ -15,7 +15,9 @@ class TrackViewModel @Inject constructor() : ViewModel() {
             loading = false,
             taskList = listOf(),
             playSound = false,
-            shouldScroll = false
+            shouldScroll = false,
+            isModalExpanded = false,
+            textFieldValue = ""
         )
     )
     val uiState = _uiState
@@ -51,17 +53,52 @@ class TrackViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    fun onAddTask() {
+    fun onTextChanged(text: String) {
+        _uiState.update { state ->
+            state.copy(
+                textFieldValue = text
+            )
+        }
+    }
+
+    fun onTaskAdded(task: String) {
+        onDismissModal()
         _taskList.add(
             CheckListEntity(
                 id = _taskList.size,
-                title = "item ${_taskList.size + 1}",
+                title = task,
                 isChecked = false
             )
         )
         _uiState.update {
             it.copy(
                 shouldScroll = true,
+                taskList = _taskList,
+                textFieldValue = ""
+            )
+        }
+    }
+
+    fun onDismissModal() {
+        _uiState.update { state ->
+            state.copy(
+                isModalExpanded = false
+            )
+        }
+    }
+
+    fun onAddTask() {
+        _uiState.update { state ->
+            state.copy(
+                isModalExpanded = true
+            )
+        }
+    }
+
+    fun onClearTask(){
+        _taskList.clear()
+        _uiState.update { state ->
+            state.copy(
                 taskList = _taskList
             )
         }
