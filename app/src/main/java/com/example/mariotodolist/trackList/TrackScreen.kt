@@ -3,24 +3,36 @@ package com.example.mariotodolist.trackList
 import android.media.MediaPlayer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,14 +55,22 @@ import kotlinx.coroutines.launch
 fun TrackScreen() {
     val vm: TrackViewModel = viewModel()
     val uiState = vm.uiState.collectAsState().value
+
     TrackScreen(
         isLoading = uiState.loading,
+        isModalExpaned = uiState.isModalExpanded,
         taskList = uiState.taskList,
         onItemClicked = vm::onTaskCompleted,
         onAddTask = vm::onAddTask,
+        onClearTask = vm::onClearTask,
         shouldScroll = uiState.shouldScroll,
-        onScrolled = vm::onScrolled
+        onScrolled = vm::onScrolled,
+        onDismissModal = vm::onDismissModal,
+        onTaskAdded = vm::onTaskAdded,
+        currentValue = uiState.textFieldValue,
+        onTextFieldChange = vm::onTextChanged
     )
+
     PlaySound(shouldPlay = uiState.playSound, afterPlayActon = vm::stopSound)
 }
 
@@ -58,11 +78,17 @@ fun TrackScreen() {
 @Composable
 private fun TrackScreen(
     isLoading: Boolean,
+    isModalExpaned: Boolean,
     taskList: List<CheckListEntity>,
     onItemClicked: (Int) -> Unit,
     onAddTask: () -> Unit,
+    onClearTask: () -> Unit,
     shouldScroll: Boolean,
-    onScrolled: () -> Unit
+    onScrolled: () -> Unit,
+    onDismissModal: () -> Unit,
+    onTaskAdded: (String) -> Unit,
+    currentValue: String,
+    onTextFieldChange: (String) -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val scrollState = rememberLazyListState()
@@ -88,45 +114,74 @@ private fun TrackScreen(
                             contentDescription = ""
                         )
                     }
+
+                    IconButton(onClick = {
+                        onClearTask()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = ""
+                        )
+                    }
                 }
             )
         }
     ) { innerPadding ->
-        LazyColumn(
-            state = scrollState,
-            modifier = Modifier
-                .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.primaryContainer)
-        ) {
-            if (isLoading) {
-                item { CircularProgressIndicator() }
-            } else {
-                itemsIndexed(taskList) { index, item ->
-                    Row(
-                        modifier = Modifier
-                            .fillParentMaxWidth()
-                            .padding(horizontal = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Item ${index + 1}")
-                        Checkbox(
-                            checked = item.isChecked,
-                            onCheckedChange = {
-                                onItemClicked(item.id)
-                            },
-                        )
-                    }
-                }
-            }
-        }
+        AddComponentBottomSheet(
+            isModalExpanded = isModalExpaned,
+            onDismissModal = onDismissModal,
+            onTaskAdded = onTaskAdded,
+            currentValue = currentValue,
+            onTextFieldChange = onTextFieldChange
+        )
+
+        TaskList(scrollState, innerPadding, isLoading, taskList, onItemClicked)
+
     }
 
     LaunchedEffect(shouldScroll) {
-        if(shouldScroll && taskList.isNotEmpty()){
+        if (shouldScroll && taskList.isNotEmpty()) {
             coroutineScope.launch {
                 scrollState.animateScrollToItem(taskList.size - 1)
                 onScrolled()
+            }
+        }
+    }
+}
+
+@Composable
+private fun TaskList(
+    scrollState: LazyListState,
+    innerPadding: PaddingValues,
+    isLoading: Boolean,
+    taskList: List<CheckListEntity>,
+    onItemClicked: (Int) -> Unit
+) {
+    LazyColumn(
+        state = scrollState,
+        modifier = Modifier
+            .padding(innerPadding)
+            .background(MaterialTheme.colorScheme.primaryContainer)
+    ) {
+        if (isLoading) {
+            item { CircularProgressIndicator() }
+        } else {
+            itemsIndexed(taskList) { index, item ->
+                Row(
+                    modifier = Modifier
+                        .fillParentMaxWidth()
+                        .padding(horizontal = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(item.title)
+                    Checkbox(
+                        checked = item.isChecked,
+                        onCheckedChange = {
+                            onItemClicked(item.id)
+                        },
+                    )
+                }
             }
         }
     }
@@ -150,6 +205,55 @@ fun PlaySound(
             }
             mediaPlayer?.start()
 
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddComponentBottomSheet(
+    isModalExpanded: Boolean,
+    onDismissModal: () -> Unit,
+    onTaskAdded: (String) -> Unit,
+    currentValue: String,
+    onTextFieldChange: (String) -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+    )
+
+    if (isModalExpanded) {
+        ModalBottomSheet(
+            modifier = Modifier.wrapContentSize(),
+            sheetState = sheetState,
+            onDismissRequest = {
+                onTextFieldChange("")
+                onDismissModal() },
+        ) {
+            Column(
+                modifier = Modifier.wrapContentSize().padding(bottom = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                TextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    value = currentValue,
+                    onValueChange = {
+                        onTextFieldChange(it)
+                    }
+                )
+                Spacer(modifier = Modifier.height(32.dp))
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    onClick = { onTaskAdded(currentValue) }
+                ) {
+                    Text("Add Task")
+                }
+            }
         }
     }
 }
