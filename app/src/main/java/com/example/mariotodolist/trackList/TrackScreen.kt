@@ -161,7 +161,8 @@ private fun TaskList(
         state = scrollState,
         modifier = Modifier
             .padding(innerPadding)
-            .background(MaterialTheme.colorScheme.primaryContainer)
+            .background(MaterialTheme.colorScheme.primaryContainer),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (isLoading) {
             item { CircularProgressIndicator() }
@@ -174,7 +175,10 @@ private fun TaskList(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(item.title)
+                    Text(
+                        modifier = Modifier.weight(0.8f),
+                        text = item.title
+                    )
                     Checkbox(
                         checked = item.isChecked,
                         onCheckedChange = {
@@ -182,6 +186,13 @@ private fun TaskList(
                         },
                     )
                 }
+                Spacer(
+                    modifier = Modifier
+                        .padding(bottom = 4.dp)
+                        .fillParentMaxWidth(0.95f)
+                        .height(1.dp)
+                        .background(MaterialTheme.colorScheme.primary)
+                )
             }
         }
     }
@@ -228,10 +239,13 @@ fun AddComponentBottomSheet(
             sheetState = sheetState,
             onDismissRequest = {
                 onTextFieldChange("")
-                onDismissModal() },
+                onDismissModal()
+            },
         ) {
             Column(
-                modifier = Modifier.wrapContentSize().padding(bottom = 32.dp),
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(bottom = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
